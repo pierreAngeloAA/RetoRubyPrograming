@@ -1,56 +1,52 @@
-# require 'csv'
-
-# data = File.open("test.csv"){|file|CSV.read(file)}
-
-# puts "#{data.inspect}"
+require 'csv'
 
 class Task
-	attr_accessor :title, :completed
+	attr_accessor :title, :completed, :id
 
-	@@list_task = []
+	@@counter = 0
 
 	def initialize(title)
+		@@counter += 1
 		@title = title
 		@completed = false
+		@id = @@counter
 	end
 
-	def self.find_task(title)
-		@@list_task.find{ |element| element.title == title }
- 	end
-
 	def self.list_task
-		@@list_task
+		CSV.foreach("test.csv") do |row|
+			puts "Id: #{row[0]} Titulo: #{row[1]} Completada: #{row[2]}"
+		end
 	end
 
 	def self.create_task
 		puts "Escriba el titulo de la tarea"
 		title = gets.chomp
-		Task.list_task << Task.new(title)
+		task = Task.new(title).array_data
+		CSV.open("test.csv", "a") do |csv|
+			csv << task
+		end
 		puts "Su tarea fue creada exitosamente"
 	end
 
-	def self.read_task
-		Task.list_task.each do |task|
-			puts "titulo: #{task.title} resuelta: #{task.completed}"
-		end
-	end
+	def self.update_task(id)
+		data = CSV.read("test.csv")
+		puts "#{id}"
 
-	def self.update_task(title)
-		task = Task.find_task(title)
-		if task == nil
-			puts "Su tarea no fue encontrada"
+		if data.find {|item| item[0].to_i == id} == nil
+			puts "No se encontró el dato en el archivo CSV"
 			task_menu
 		end
 
 		puts "Digite el nuevo titulo de la tarea"
 		new_title  = gets.chomp
-		task.title = new_title
+
 		puts "Digite si fue completada la tarea"
 		
 		print_options([
 			'1. tarea completada',
 			'2. tarea no completada',
 		])
+
 		completed  = gets.chomp.to_i
 		case completed
 		when 1
@@ -60,22 +56,44 @@ class Task
 		else
 			puts "opccion invalida"
 		end
-		task.completed = completed
+
+		data.each do |item|
+			if item[0].to_i == id
+				item[1] = new_title
+				item[2] = completed
+			end
+		end
+
+		CSV.open("test.csv", "w") do |csv|
+			data.each { |item| csv << item }
+		end
 		puts "su tarea fue Actualizada correctamente"
-		puts "Tarea: #{task.title} terminada: #{task.completed}"
+		puts "Tarea: #{new_title} terminada: #{completed}"
 	end
 
-	def self.delete_task(title)
-		task = Task.find_task(title)
-		if task == nil
-			puts "Su tarea no fue encontrada"
+	def self.delete_task(id)
+		data = CSV.read("test.csv")
+		
+	 	if data.find { |item| item[0].to_i == id } == nil
+			puts "No se encontró el dato en el archivo CSV"
 			task_menu
 		end
-		@@list_task = Task.list_task.select { |task| task.title != title}
+
+		data = data.select {|item| item[0].to_i != id }
+
+		CSV.open("test.csv", "w") do |csv|
+			data.each { |item| csv << item }
+		end
 		puts "su tarea fue eliminada exitosamente"
 		task_menu
 	end
+
+	def array_data
+		[@id, @title, @completed]
+	end
 end
+
+# Menu ================Menu================== Menu
 
 def task_menu
 	i = 0
@@ -95,19 +113,19 @@ def task_menu
 	  when 2
 			puts '=' * 40
 			puts "Lista de Tareas"
-			Task.read_task
+			Task.list_task
 			puts '=' * 40
 	  when 3
 			puts '=' * 40
-			puts "Digite el titulo de la tarea que quiere actualizar"
-			title  = gets.chomp
-			Task.update_task(title)
+			puts "Digite el Id de la tarea que quiere actualizar"
+			id = gets.chomp.to_i
+			Task.update_task(id)
 			puts '=' * 40
 	  when 4
 			puts '=' * 40
-			puts "Digite el titulo de la tarea que quiere eliminar"
-			title  = gets.chomp
-			Task.delete_task(title)
+			puts "Digite el Id de la tarea que quiere eliminar"
+			id  = gets.chomp.to_i
+			Task.delete_task(id)
 			puts '=' * 40
 	  when 5
 			task_menu
@@ -122,7 +140,12 @@ def print_options(options)
   options.each { |option| puts option }
 end
 
-(0..10).each { |i| Task.list_task << Task.new("test #{i}")}
+CSV.open("test.csv", "w") do |test| 
+	10.times do |i|
+		test << Task.new("test #{i}").array_data
+	end
+end
 
 
+puts Task.new("es el").id
 task_menu

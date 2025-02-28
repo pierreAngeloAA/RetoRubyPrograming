@@ -1,10 +1,7 @@
 def init_game
   puts "Welcome to Rock, Paper, Scissors!"
-  
-  puts "+" * 50
-  puts playing(computer_option, human_option)
-  puts "+" * 50
-  play_again?
+  puts result = playing(computer_option, human_option)
+  result
 end
 
 def computer_option
@@ -66,13 +63,53 @@ def play_again?
   i = gets.chomp.to_i
   case i
   when 1
-    init_game
+    number_of_rounds
   when 2
     return
   else
   puts 'SELECCIONE UNA OPCCION CORRECTA'
   end
 end
-  
 
-init_game
+
+def number_of_rounds
+  puts "Digite el numero de rondas"
+
+  rounds = []
+
+  n = gets.chomp.to_i
+  win_game = win_game(n)
+
+  n.times do |i|
+    rounds << init_game
+  end
+
+  win = rounds.count("you win! 🤩")
+  lose = rounds.count("you lose! 😔")
+  draw = rounds.count("You draw! 🥲")
+
+  case 
+  when win >= win_game || win > lose
+    puts "HAS GANADO LA PARTIDA 🏆"
+  when  lose == win 
+    puts "HAS EMPATADO LA PARTIDA 😬"
+  else
+    puts "HAS PERDIDO LA PARTIDA 👎🏻"
+  end
+
+  play_again?
+end
+
+
+def win_game(n)
+  counter = 0
+  (0..n).each do |i|
+    if i.even?
+      counter += 1
+    end
+  end
+  puts "Para Ganar el juego debes derrotar a la maquina minimo #{counter} veces"
+  counter
+end
+
+number_of_rounds
